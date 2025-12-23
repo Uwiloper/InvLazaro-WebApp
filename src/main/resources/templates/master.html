@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Inversiones Lazaro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+          integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+
+    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
+
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css"
+    />
+
+
+    <style>
+        /*------------------------------------*/
+    /* --- NAVBAR INDUSTRIAL PREMIUM --- */
+    /*----------------------------------*/
+    .navbar-industrial {
+        background-color: #0f172a; /* Slate Dark (Color Acero Oscuro) */
+        background: linear-gradient(to right, #0f172a, #1e293b); /* Degradado sutil */
+        padding: 1rem 0; /* Más espacio arriba y abajo */
+        box-shadow: 0 4px 20px rgba(0,0,0,0.25); /* Sombra elegante */
+    }
+
+    /* Marca / Logo */
+    .navbar-brand {
+        font-weight: 700;
+        font-size: 1.5rem;
+        color: #ffffff !important;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .navbar-brand i {
+        color: #f59e0b; /* Icono dorado/naranja */
+        margin-right: 8px;
+    }
+
+    /* Enlaces del menú */
+    .nav-link {
+        color: #e2e8f0 !important; /* Blanco hueso */
+        font-weight: 500;
+        margin: 0 5px;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    /* Efecto Hover en enlaces (Subrayado animado) */
+    .nav-link::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 2px;
+        bottom: 0;
+        left: 0;
+        background-color: #f59e0b; /* Naranja industrial */
+        transition: width 0.3s;
+    }
+    .nav-link:hover::after {
+        width: 100%;
+    }
+    .nav-link:hover {
+        color: #ffffff !important;
+    }
+
+    /* Barra de Búsqueda */
+    .search-input-group .form-control {
+        background-color: rgba(255, 255, 255, 0.1); /* Transparente */
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        border-top-left-radius: 20px;
+        border-bottom-left-radius: 20px;
+    }
+    .search-input-group .form-control::placeholder {
+        color: #94a3b8;
+    }
+    .search-input-group .form-control:focus {
+        background-color: rgba(255, 255, 255, 0.2);
+        box-shadow: none;
+        border-color: #f59e0b;
+    }
+    .search-input-group .btn-search {
+        background-color: #f59e0b; /* Botón naranja */
+        border: none;
+        color: white;
+        border-top-right-radius: 20px;
+        border-bottom-right-radius: 20px;
+        transition: background 0.3s;
+    }
+    .search-input-group .btn-search:hover {
+        background-color: #d97706; /* Naranja más oscuro */
+    }
+
+    /* Botones de Usuario y Carrito */
+    .user-actions .dropdown-toggle {
+        color: white !important;
+        text-decoration: none;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .cart-icon-container {
+        position: relative;
+        background: rgba(255,255,255,0.1);
+        padding: 8px;
+        border-radius: 50%;
+        transition: background 0.3s;
+    }
+    .cart-icon-container:hover {
+        background: rgba(255,255,255,0.2);
+        transform: scale(1.05);
+    }
+    .cart-icon-container i {
+        color: #f59e0b;
+        font-size: 1.2rem;
+    }
+
+    /* Divider vertical */
+    .vertical-divider {
+        width: 1px;
+        height: 25px;
+        background-color: rgba(255,255,255,0.2);
+        margin: 0 15px;
+    }
+
+    /* Dropdown Menus */
+    .dropdown-menu {
+        border: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        border-radius: 10px;
+        margin-top: 10px;
+    }
+    .dropdown-item:active {
+        background-color: #0f172a;
+    }
+    </style>
+
+    <div layout:fragment="styles" th:remove="tag">
+    </div>
+
+</head>
+<body>
+<nav class="navbar navbar-expand-lg  navbar-industrial sticky-top" >
+    <div class="container-fluid">
+        <button class="navbar-toggler" type="button" style="border-color: rgba(255,255,255,0.5);"
+                data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo03"
+                aria-controls="navbarTogglerDemo03" aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+        </button>
+        <a class="navbar-brand" href="/">Metal mecanica</a>
+
+        <div class="collapse navbar-collapse" id="navbarTogglerDemo03">
+
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                <li class="nav-item"><a class="nav-link" aria-current="page" href="/">Inicio</a></li>
+                <li class="nav-item"><a class="nav-link" href="/catalogo">Catalogo</a></li>
+                <li class="nav-item"><a class="nav-link" href="/cotizador">Personaliza</a></li>
+            </ul>
+
+
+            <form action="/catalogo" method="get" class="d-flex my-2 my-lg-0 mx-lg-auto w-50 search-input-group">
+                <input type="search" name="q" class="form-control"
+                       placeholder="Buscar productos"
+                       aria-label="Buscar productos">
+                <button class="btn btn-search" type="submit">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+
+            <div class="d-flex align-items-center ms-auto gap-3 user-actions">
+
+                <!--                inicio de sesion-->
+                <div class="dropdown" sec:authorize="!isAuthenticated()">
+
+                    <a class="dropdown-toggle" href="#" role="button" id="sesionDropdown"
+                       data-bs-toggle="dropdown" aria-expanded="false"
+                    > <i class="fa-regular fa-user"></i>Hola, Ingresa
+                    </a>
+
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="sesionDropdown">
+                        <li><a class="dropdown-item" href="" data-bs-toggle="modal" data-bs-target="#loginModal">
+                            <i class="fa-solid fa-right-to-bracket me-2"></i>Inicia Sesión
+                        </a></li>
+                        <li><a class="dropdown-item" href="/registrar/registro"><i class="fa-solid fa-user-plus me-2"></i> Registrate</a></li>
+                    </ul>
+                </div> <!--find de inicio de sesion -->
+
+                <!--                resources -->
+                <div class="d-flex align-items-center gap-3" sec:authorize="isAuthenticated()">
+                    <div class="dropdown" sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_DESPACHO', 'ROLE_ALMACEN', 'ROLE_CHOFER', 'ROLE_VENTAS')">
+
+                        <a class="resource-menu-link" href="#" role="button" id="recursosDropdown"
+                           data-bs-toggle="dropdown" aria-expanded="false" title="Recursos de Administración">
+                            <i class="fa-solid fa-layer-group"></i> Resources
+                        </a>
+
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="recursosDropdown">
+                            <li><h6 class="dropdown-header">Administración de Datos</h6></li>
+                            <th:block sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_DESPACHO', 'ROLE_ALMACEN', 'ROLE_CHOFER', 'ROLE_VENTAS')">
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" th:href="@{/admin/dashboard}" >Panel Admin</a></li>
+<!--                                <li><a class="dropdown-item" th:href="@{/admin/categoria}">Categoría</a></li>-->
+<!--                                <li><a class="dropdown-item" th:href="@{/admin/marca}">Marca</a></li>-->
+<!--                                <li><a class="dropdown-item" th:href="@{/admin/tproducto}">Tipo de Producto</a></li>-->
+<!--                                <li><a class="dropdown-item" th:href="@{/admin/productos}">Productos</a></li>-->
+<!--                                <li><hr class="dropdown-divider"></li>-->
+<!--                                <li><a class="dropdown-item" th:href="@{/admin/usuarios}">Usuarios</a></li>-->
+                            </th:block>
+
+<!--                            <th:block sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_MARKETING')">-->
+<!--                                <li><hr class="dropdown-divider"></li>-->
+<!--                                <li><a class="dropdown-item" th:href="@{/admin/banners}">Banner Principal</a></li>-->
+<!--                                <li><a class="dropdown-item" th:href="@{/admin/home-editor}">Banners Secundarios</a></li>-->
+<!--                            </th:block>-->
+
+<!--                            <th:block sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_DESPACHO')">-->
+<!--                                <li><hr class="dropdown-divider"></li>-->
+<!--                                <li><a class="dropdown-item" th:href="@{/admin/pedidos}">Gestion de Pedidos</a></li>-->
+<!--                            </th:block>-->
+
+                            <th:block sec:authorize="hasRole('ROLE_ADMIN')">
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" th:href="@{/admin/auditoria}">Auditoria</a></li>
+                            </th:block>
+
+                        </ul>
+                    </div>
+
+                    <div class="dropdown">
+
+                        <a class="resource-menu-link dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                           data-bs-toggle="dropdown" aria-expanded="false"
+                           th:text="'Bienvenido, '+ ${#authentication.principal.nombre}">
+                        </a>
+
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink">
+                            <li><a class="dropdown-item" href="/cliente/account">Mi cuenta</a></li>
+                            <li><a class="dropdown-item" th:href="@{/misPedidos}">Mis Compras</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="/logout">Cerrar sesión</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <span style="width: 2px; height: 20px; background-color: #ccc; display: inline-block;"></span>
+                <div>
+                    <a th:href="@{/carrito}" class="cart-icon-container d-inline-block" title="Ver Carrito">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</nav>
+
+
+<main>
+    <div class="container">
+        <div th:if="${msgExito ne null}" class="alert alert-success alert-dismissible fade show mt-2" role="alert">
+            <strong>[[${msgExito}]]</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+
+    <section layout:fragment="content">
+
+    </section>
+</main>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO"
+        crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/js/all.min.js"
+        integrity="sha512-b+nQTCdtTBIRIbraqNEwsjB6UvL3UEMkXnhzd8awtCYh0Kcsjl9uEgwVFVbhoj3uu1DO1ZMacNvLoyJJiNfcvg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    Fancybox.bind("[data-fancybox]", {
+      // Your custom options
+    });
+
+</script>
+<footer class="navbar-industrial text-light mt-5">
+    <div class="container py-4">
+        <div class="row">
+            <!-- Sección 1 -->
+            <div class="col-md-4">
+                <h5>Mi Sitio Web</h5>
+                <p class="small">
+                    Aquí puedes poner una breve descripción de tu página, empresa o proyecto.
+                </p>
+            </div>
+
+            <!-- Sección 2 -->
+            <div class="col-md-4">
+                <h5>Enlaces útiles</h5>
+                <ul class="list-unstyled">
+                    <li><a href="#" class="text-decoration-none text-light">Inicio</a></li>
+                    <li><a href="#" class="text-decoration-none text-light">Servicios</a></li>
+                    <li><a href="#" class="text-decoration-none text-light">Nosotros</a></li>
+                    <li><a href="#" class="text-decoration-none text-light">Contacto</a></li>
+                </ul>
+            </div>
+
+            <!-- Sección 3 -->
+            <div class="col-md-4">
+                <h5>Contáctanos</h5>
+                <p class="small mb-1"><i class="bi bi-geo-alt-fill"></i> Dirección: Lima, Perú</p>
+                <p class="small mb-1"><i class="bi bi-telephone-fill"></i> Tel: +51 999 999 999</p>
+                <p class="small"><i class="bi bi-envelope-fill"></i> Email: contacto@misitio.com</p>
+            </div>
+        </div>
+        <hr class="border-secondary">
+        <div class="text-center small">
+            &copy; 2025 Mi Sitio Web - Todos los derechos reservados
+        </div>
+    </div>
+</footer>
+
+
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content p-4">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="loginModalLabel">Iniciar Sesión</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+
+                <div id="error-modal" class="alert alert-danger my-3 d-none"></div>
+                <form id="loginFormModal">
+                    <div class="mb-3">
+                        <label for="emailModal" class="form-label">Correo electrónico</label>
+                        <input type="email" class="form-control form-underline" id="emailModal"
+                               placeholder="Ingresa tu correo electrónico" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="passwordModal" class="form-label">Contraseña</label>
+                        <input type="password" class="form-control form-underline" placeholder="Ingresa tu contraseña"
+                               id="passwordModal" required>
+                    </div>
+                    <button class="btn btn-primary" type="submit">Ingresar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<input type="hidden" id="loginErrorMsg"
+       th:value="${session.SPRING_SECURITY_LAST_EXCEPTION?.message}">
+<style>
+
+
+    /* Aplica a todos los inputs de tipo texto, email, password, etc */
+        .form-underline {
+            border: none !important;
+            border-bottom: 2px solid #ccc !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            outline: none !important;
+            transition: border-color 0.3s ease-in-out !important;
+        }
+
+        /* Color al hacer focus */
+        .form-underline:focus {
+            border-bottom: 2px solid #007bff !important; /* Azul Bootstrap */
+            box-shadow: none !important;
+        }
+
+        /* Si está en error */
+        .form-underline.is-invalid {
+            border-bottom: 2px solid #dc3545 !important; /* Rojo error */
+        }
+
+        /* Si está válido */
+        .form-underline.is-valid {
+            border-bottom: 2px solid #28a745 !important; /* Verde valid */
+        }
+
+        html, body {
+            height: 100%; /* Para que ocupe toda la altura de la ventana */
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh; /* Mínimo el alto de la ventana */
+        }
+
+        main {
+            flex: 1; /* El contenido crece y empuja el footer hacia abajo */
+        }
+
+
+
+        .link-float {
+      color: #6c757d; /* gris Bootstrap */
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      display: inline-block;
+    }
+
+    .link-float:hover {
+      background-color: rgba(255, 255, 255, 0.9); /* blanco opaco */
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* sombra suave gris */
+      transform: translateY(-2px); /* leve efecto de elevación */
+      color: #495057; /* gris más oscuro */
+    }
+
+
+
+    /* 1. Estilo Base: Negro, sin fondo, sin subrayado, sin flecha (ya quitamos dropdown-toggle en HTML) */
+.resource-menu-link {
+    color: #ffffff !important; /* Texto y ícono en color negro/gris oscuro */
+    background-color: transparent !important; /* Asegura que no tenga color de fondo */
+    border: none !important; /* Elimina cualquier borde si lo tuviera */
+    text-decoration: none !important; /* Elimina el subrayado */
+    padding: 0.5rem 0.75rem; /* Pequeño padding para el área de hover */
+    cursor: pointer; /* Indica que es clickeable */
+    display: inline-flex; /* Permite alinear el ícono y el texto */
+    align-items: center;
+    gap: 0.5rem; /* Espacio entre el ícono y el texto */
+}
+
+/* 2. Efecto Hover: Azul claro (un color suave de ejemplo) */
+.resource-menu-link:hover {
+    color: #007bff !important; /* Azul para el texto/ícono al pasar el mouse */
+    background-color: rgba(0, 123, 255, 0.1); /* Fondo azul claro semi-transparente */
+    border-radius: 0.25rem; /* Borde redondeado suave al pasar el mouse */
+}
+
+/* 3. Estilo para el ícono de cuadrícula */
+.resource-menu-link .fa-th {
+    color: #333;
+}
+
+/* 4. Estilo de Dropdown Activo (opcional) */
+.resource-menu-link[aria-expanded="true"] {
+    color: #007bff !important;
+    background-color: rgba(0, 123, 255, 0.15) !important;
+}
+
+</style>
+<div layout:fragment="scripts" th:remove="tag">
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    document.addEventListener("DOMContentLoaded", () => {
+        const loginForm = document.getElementById("loginFormModal"); // El form del modal
+        const loginModalEl = document.getElementById("loginModal"); // El modal
+        const errorDiv = document.getElementById("error-modal"); // El div de error
+        let redirectUrlAfterLogin = null; // Variable para guardar la URL
+
+        // 1. CAPTURAR LA URL DE REDIRECCIÓN (CUANDO SE ABRE EL MODAL)
+        loginModalEl?.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // El botón que disparó el modal
+
+            if (button && button.dataset.redirectUrl) {
+                redirectUrlAfterLogin = button.dataset.redirectUrl; // ej: '/compra/checkout'
+                console.log("Destino guardado:", redirectUrlAfterLogin);
+            } else {
+                redirectUrlAfterLogin = null;
+            }
+        });
+
+        // 2. MANEJAR EL ENVÍO DEL FORMULARIO CON FETCH (AJAX)
+        loginForm?.addEventListener("submit", async (e) => {
+            e.preventDefault(); // Detener el envío normal
+            errorDiv.classList.add("d-none"); // Ocultar errores anteriores
+
+            const email = document.getElementById("emailModal").value;
+            const pass = document.getElementById("passwordModal").value;
+
+            // Preparamos los datos como 'x-www-form-urlencoded' (que Spring Security espera)
+            const formData = new URLSearchParams();
+            formData.append("username", email);
+            formData.append("password", pass);
+
+            // Si capturamos una URL (ej. '/compra/checkout'), la enviamos
+            if (redirectUrlAfterLogin) {
+                formData.append("targetUrl", redirectUrlAfterLogin);
+            }
+
+            try {
+                const response = await fetch("/login", { // POST a Spring Security
+                    method: "POST",
+                    body: formData
+                    // NO NECESITAMOS CSRF porque está deshabilitado en SecurityConfig
+                });
+
+                if (response.ok) { // Éxito (Status 200)
+                    const data = await response.json(); // Leer el JSON que enviamos
+                    // Redirigir a la URL que nos dijo el successHandler
+                    window.location.href = data.redirectUrl || "/";
+
+                } else if (response.status === 401) { // Fallo (Status 401)
+                    // La contraseña estaba mal, mostramos el error EN EL MODAL
+                    errorDiv.textContent = "Correo o contraseña incorrectos.";
+                    errorDiv.classList.remove("d-none");
+                } else {
+                    // Otro error
+                    errorDiv.textContent = "Error inesperado. Intente de nuevo.";
+                    errorDiv.classList.remove("d-none");
+                }
+
+            } catch (err) {
+                console.error("Error de red:", err);
+                errorDiv.textContent = "Error de conexión.";
+                errorDiv.classList.remove("d-none");
+            }
+        });
+
+        // 3. LIMPIAR AL CERRAR EL MODAL
+        loginModalEl?.addEventListener("hidden.bs.modal", () => {
+            errorDiv.classList.add("d-none"); // Ocultar mensaje de error
+            redirectUrlAfterLogin = null; // Limpiar la URL para la próxima vez
+        });
+
+        // 4. ELIMINAMOS LA LÓGICA de "params.has('error')"
+        // Ya no es necesaria porque no hay recarga de página por error.
+    });
+    /*]]>*/
+
+</script>
+</body>
+</html>

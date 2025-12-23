@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{master.html}">
+<head>
+    <title>Gestión de Pedidos</title>
+    <th:block th:if="${_csrf != null}">
+        <meta name="_csrf" th:content="${_csrf.token}"/>
+        <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    </th:block>
+</head>
+<body>
+<div class="container" layout:fragment="content">
+    <div class="d-flex align-items-center mb-4">
+        <a href="/admin/dashboard" class="btn btn-secondary me-3"><i class="fas fa-arrow-left"></i></a>
+        <h1>Gestión de Pedidos</h1>
+    </div>
+
+
+    <form th:action="@{/admin/pedidos}" method="get" class="mb-3">
+        <div class="row">
+            <div class="col-md-6 col-lg-4">
+                <div class="input-group">
+                    <input type="search" name="busqueda" class="form-control"
+                           placeholder="Buscar por Cód. Pedido o Email" th:value="${busqueda}">
+                    <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i> Buscar</button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <table class="table table-striped table-bordered table-hover align-middle">
+        <thead class="table-dark">
+        <tr>
+            <th>Código</th>
+            <th>Cliente</th>
+            <th>Fecha</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="pedido : ${pedidosPage.content}" th:id="'fila-pedido-' + ${pedido.id}">
+            <td><a th:href="@{/admin/pedidos/detalle/{id}(id=${pedido.id})}" th:text="${pedido.codigoPedido}"></a></td>
+            <td th:text="${pedido.usuario.email}"></td>
+            <td th:text="${#temporals.format(pedido.fechaCreacion, 'dd/MM/yyyy HH:mm')}"></td>
+            <td th:text="'S/' + ${#numbers.formatDecimal(pedido.total, 1, 'COMMA', 2, 'POINT')}"></td>
+
+            <td style="min-width: 220px;">
+                <form th:id="'form-estado-' + ${pedido.id}" class="d-flex align-items-center">
+                    <input type="hidden" name="pedidoId" th:value="${pedido.id}">
+
+                    <th:block th:with="isAdmin=${#authorization.expression('hasRole(''ADMIN'')')},
+                                       isCancelado=${pedido.estado.name() == 'CANCELADO'},
+                                       isCanceladoPorCliente=${pedido.estado.name() == 'CANCELADO' and (pedido.motivoCancelacion == null or pedido.motivoCancelacion.trim().isEmpty())}">
+
+                        <select name="estado" class="form-select form-select-sm me-2 fw-bold"
+                                th:classappend="${pedido.estado.name() == 'PENDIENTE' ? 'text-secondary border-secondary' :
+                                                 (pedido.estado.name() == 'ORDEN_RECIBIDA' ? 'text-info-emphasis border-info' :
+                                                 (pedido.estado.name() == 'EN_PREPARACION' ? 'text-warning-emphasis border-warning' :
+                                                 (pedido.estado.name() == 'EN_CAMINO' ? 'text-primary-emphasis border-primary' :
+                                                 (pedido.estado.name() == 'REAGENDADO' ? 'text-warning border-warning bg-light' :
+                                                 (pedido.estado.name() == 'ENTREGADO' ? 'text-success border-success' :
+                                                 (pedido.estado.name() == 'FINALIZADO' ? 'text-dark border-dark bg-light' :
+                                                 (pedido.estado.name() == 'CANCELADO' ? 'text-danger border-danger' : '')))))))}"
+
+                                th:disabled="${isCanceladoPorCliente or (isCancelado and !isAdmin)}"
+                                th:id="'select-estado-' + ${pedido.id}">
+
+                            <option th:each="est : ${estados}"
+                                    th:value="${est}"
+                                    th:text="${est.name().replace('_', ' ')}"
+                                    th:selected="${est == pedido.estado}"
+                                    th:disabled="${!isAdmin
+                                        and est.name() != 'CANCELADO'
+                                        and est != pedido.estado
+                                        and !(
+                                            (pedido.estado.name() == 'PENDIENTE'      and est.name() == 'ORDEN_RECIBIDA') or
+                                            (pedido.estado.name() == 'ORDEN_RECIBIDA' and est.name() == 'EN_PREPARACION') or
+                                            (pedido.estado.name() == 'EN_PREPARACION' and est.name() == 'EN_CAMINO') or
+                                            (pedido.estado.name() == 'EN_CAMINO'      and (est.name() == 'ENTREGADO' or est.name() == 'REAGENDADO')) or
+                                            (pedido.estado.name() == 'REAGENDADO'     and (est.name() == 'ENTREGADO' or est.name() == 'EN_CAMINO')) or
+                                            (pedido.estado.name() == 'ENTREGADO'      and est.name() == 'FINALIZADO')
+                                        )
+                                    }">
+                            </option>
+                        </select>
+
+                        <button type="button" class="btn btn-sm btn-primary"
+                                th:onclick="'prepararEnvio(' + ${pedido.id} + ')'"
+                                th:disabled="${isCanceladoPorCliente or (isCancelado and !isAdmin)}">
+                            <i class="fas fa-save"></i>
+                        </button>
+
+                    </th:block>
+                </form>
+            </td>
+
+            <td>
+                <a th:href="@{/admin/pedidos/detalle/{id}(id=${pedido.id})}" class="btn btn-sm btn-info" title="Ver Detalle"><i class="fas fa-eye"></i></a>
+                <a th:href="@{/admin/pedidos/imprimir/{id}(id=${pedido.id})}" target="_blank" class="btn btn-sm btn-secondary" title="Imprimir"><i class="fas fa-print"></i></a>
+            </td>
+        </tr>
+        <tr th:if="${pedidosPage.empty}">
+            <td colspan="6" class="text-center">No hay pedidos registrados.</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <nav th:if="${pedidosPage.totalPages > 1}">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${pedidosPage.first}? 'disabled'">
+                <a class="page-link" th:href="@{/admin/pedidos(page=${pedidosPage.number-1}, busqueda=${busqueda})}">Anterior</a>
+            </li>
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, pedidosPage.totalPages-1)}"
+                th:classappend="${pedidosPage.number == i}? 'active'">
+                <a class="page-link" th:href="@{/admin/pedidos(page=${i}, busqueda=${busqueda})}" th:text="${i+1}"></a>
+            </li>
+            <li class="page-item" th:classappend="${pedidosPage.last}? 'disabled'">
+                <a class="page-link" th:href="@{/admin/pedidos(page=${pedidosPage.number+1}, busqueda=${busqueda})}">Siguiente</a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="modal fade" id="accionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+
+                <div class="modal-header text-white" id="modalHeader">
+                    <h5 class="modal-title" id="modalTitle">Confirmar Acción</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <p class="fw-bold text-secondary" id="modalDesc">Descripción.</p>
+
+                    <div id="bloqueMotivo" class="d-none">
+                        <label for="txtMotivo" class="form-label fw-bold">Motivo de cancelación:</label>
+                        <textarea id="txtMotivo" class="form-control border-danger" rows="3"
+                                  placeholder="Ej: Stock agotado, error en precio..."></textarea>
+                        <div id="errMotivo" class="text-danger mt-1 small d-none">
+                            <i class="fas fa-exclamation-circle"></i> Debes ingresar un motivo.
+                        </div>
+                    </div>
+
+                    <div id="bloqueReagendar" class="d-none">
+                        <label for="inputFecha" class="form-label fw-bold text-primary">Nueva Fecha Estimada:</label>
+                        <input type="date" id="inputFecha" class="form-control mb-3 border-primary">
+                        <div id="errFecha" class="text-danger mt-1 small d-none mb-2">
+                            <i class="fas fa-exclamation-circle"></i> Fecha obligatoria.
+                        </div>
+
+                        <label for="txtMotivoReagendar" class="form-label fw-bold text-primary">Motivo del cambio (Para el cliente):</label>
+                        <textarea id="txtMotivoReagendar" class="form-control border-primary" rows="2"
+                                  placeholder="Ej: El camión tuvo un retraso, no ubicamos la dirección..."></textarea>
+                        <div id="errMotivoReagendar" class="text-danger mt-1 small d-none">
+                            <i class="fas fa-exclamation-circle"></i> Indica el motivo.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn" id="btnConfirmarAccion" onclick="ejecutarAjaxAccion()">
+                        Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="liveToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="toastMessage">Estado actualizado.</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div layout:fragment="scripts">
+    <script>
+        let pedidoIdEnProceso = null;
+        let estadoEnProceso = null;
+
+        // 1. CSRF
+        const csrfMeta = document.querySelector("meta[name='_csrf']");
+        const csrfHeaderMeta = document.querySelector("meta[name='_csrf_header']");
+        const csrfToken = csrfMeta ? csrfMeta.getAttribute("content") : null;
+        const csrfHeader = csrfHeaderMeta ? csrfHeaderMeta.getAttribute("content") : null;
+
+        // 2. Detectar Admin
+        const esAdmin = !document.querySelector('option[disabled]');
+
+        // --- PREPARAR EL MODAL ---
+        function prepararEnvio(pedidoId) {
+            const select = document.getElementById('select-estado-' + pedidoId);
+            const estadoSeleccionado = select.value;
+
+            pedidoIdEnProceso = pedidoId;
+            estadoEnProceso = estadoSeleccionado;
+
+            const modalEl = new bootstrap.Modal(document.getElementById('accionModal'));
+
+            // Referencias DOM
+            const header = document.getElementById('modalHeader');
+            const title = document.getElementById('modalTitle');
+            const desc = document.getElementById('modalDesc');
+            const btn = document.getElementById('btnConfirmarAccion');
+            const bloqueMotivo = document.getElementById('bloqueMotivo');
+            const bloqueReagendar = document.getElementById('bloqueReagendar');
+
+            // Limpieza
+            document.getElementById('txtMotivo').value = '';
+            document.getElementById('txtMotivoReagendar').value = '';
+            document.getElementById('inputFecha').value = '';
+            document.querySelectorAll('.text-danger').forEach(el => el.classList.add('d-none'));
+
+            if (estadoSeleccionado === 'CANCELADO') {
+                // CONFIGURACIÓN PARA CANCELAR
+                header.className = 'modal-header bg-danger text-white';
+                title.innerText = 'Cancelar Pedido';
+                desc.innerText = 'Estás a punto de cancelar este pedido. Por favor indica el motivo:';
+                bloqueMotivo.classList.remove('d-none');
+                bloqueReagendar.classList.add('d-none');
+                btn.className = 'btn btn-danger';
+                btn.innerText = 'Confirmar Cancelación';
+                modalEl.show();
+
+            } else if (estadoSeleccionado === 'REAGENDADO') {
+                // CONFIGURACIÓN PARA REAGENDAR
+                header.className = 'modal-header bg-warning text-dark';
+                title.innerText = 'Reprogramar Entrega';
+                desc.innerText = 'Se notificará al cliente la nueva fecha y el motivo.';
+                bloqueMotivo.classList.add('d-none');
+                bloqueReagendar.classList.remove('d-none');
+                btn.className = 'btn btn-warning fw-bold';
+                btn.innerText = 'Confirmar Nueva Fecha';
+                modalEl.show();
+
+            } else {
+                // OTROS ESTADOS (Directo)
+                enviarAjax(pedidoId, estadoSeleccionado, null, null, null);
+            }
+        }
+
+        // --- EJECUTAR ACCIÓN ---
+        function ejecutarAjaxAccion() {
+            const motivoCancel = document.getElementById('txtMotivo').value.trim();
+            const fecha = document.getElementById('inputFecha').value;
+            const motivoReag = document.getElementById('txtMotivoReagendar').value.trim();
+            let esValido = true;
+
+            if (estadoEnProceso === 'CANCELADO') {
+                if (motivoCancel === "") {
+                    document.getElementById('errMotivo').classList.remove('d-none');
+                    esValido = false;
+                }
+            } else if (estadoEnProceso === 'REAGENDADO') {
+                if (fecha === "") {
+                    document.getElementById('errFecha').classList.remove('d-none');
+                    esValido = false;
+                }
+                if (motivoReag === "") {
+                    document.getElementById('errMotivoReagendar').classList.remove('d-none');
+                    esValido = false;
+                }
+            }
+
+            if (!esValido) return;
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById('accionModal'));
+            modal.hide();
+
+            enviarAjax(pedidoIdEnProceso, estadoEnProceso, motivoCancel, fecha, motivoReag);
+        }
+
+        // --- ENVÍO AL SERVIDOR ---
+        function enviarAjax(pedidoId, estado, motivoCancel, fecha, motivoReag) {
+            const formData = new FormData();
+            formData.append('pedidoId', pedidoId);
+            formData.append('estado', estado);
+
+            if (motivoCancel) formData.append('motivoCancelacion', motivoCancel);
+            if (fecha) formData.append('nuevaFecha', fecha);
+            if (motivoReag) formData.append('motivoReagendacion', motivoReag);
+
+            const headers = {};
+            if (csrfToken && csrfHeader) headers[csrfHeader] = csrfToken;
+
+            document.body.style.cursor = 'wait';
+
+            fetch('/admin/pedidos/api/actualizar-estado', {
+                method: 'POST',
+                headers: headers,
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Error en la petición');
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    mostrarToast(data.message, 'bg-success');
+                    actualizarVisual(pedidoId, estado);
+                    actualizarReglasDeNegocio(pedidoId, estado);
+                } else {
+                    mostrarToast(data.message, 'bg-danger');
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                mostrarToast('Error al conectar con el servidor.', 'bg-danger');
+            })
+            .finally(() => {
+                document.body.style.cursor = 'default';
+            });
+        }
+
+        // --- UTILIDADES VISUALES ---
+        function mostrarToast(mensaje, claseBg) {
+            const toastEl = document.getElementById('liveToast');
+            const toastBody = document.getElementById('toastMessage');
+            toastEl.className = `toast align-items-center text-white border-0 ${claseBg}`;
+            toastBody.innerText = mensaje;
+            new bootstrap.Toast(toastEl).show();
+        }
+
+        function actualizarVisual(id, nuevoEstado) {
+            const select = document.getElementById('select-estado-' + id);
+            select.className = "form-select form-select-sm me-2 fw-bold";
+
+            const colores = {
+                'PENDIENTE': 'text-secondary border-secondary',
+                'ORDEN_RECIBIDA': 'text-info-emphasis border-info',
+                'EN_PREPARACION': 'text-warning-emphasis border-warning',
+                'EN_CAMINO': 'text-primary-emphasis border-primary',
+                'REAGENDADO': 'text-warning border-warning bg-light',
+                'ENTREGADO': 'text-success border-success',
+                'FINALIZADO': 'text-dark border-dark bg-light',
+                'CANCELADO': 'text-danger border-danger'
+            };
+
+            if(colores[nuevoEstado]) select.className += " " + colores[nuevoEstado];
+        }
+
+        function actualizarReglasDeNegocio(id, estadoActual) {
+            if (esAdmin) return;
+
+            const select = document.getElementById('select-estado-' + id);
+            const opciones = select.querySelectorAll('option');
+
+            opciones.forEach(opcion => {
+                const estOpcion = opcion.value;
+                let habilitar = false;
+
+                if (estOpcion === 'CANCELADO' || estOpcion === estadoActual) habilitar = true;
+                else if (estadoActual === 'PENDIENTE' && estOpcion === 'ORDEN_RECIBIDA') habilitar = true;
+                else if (estadoActual === 'ORDEN_RECIBIDA' && estOpcion === 'EN_PREPARACION') habilitar = true;
+                else if (estadoActual === 'EN_PREPARACION' && estOpcion === 'EN_CAMINO') habilitar = true;
+                else if (estadoActual === 'EN_CAMINO' && (estOpcion === 'ENTREGADO' || estOpcion === 'REAGENDADO')) habilitar = true;
+                else if (estadoActual === 'REAGENDADO' && (estOpcion === 'EN_CAMINO' || estOpcion === 'ENTREGADO')) habilitar = true;
+                else if (estadoActual === 'ENTREGADO' && estOpcion === 'FINALIZADO') habilitar = true;
+
+                opcion.disabled = !habilitar;
+            });
+        }
+    </script>
+</div>
+</body>
+</html>

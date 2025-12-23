@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{master.html}">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Checkout - Envío y Pago</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .summary-card { position: sticky; top: 20px; }
+        .address-card { border: 1px solid #ddd; border-radius: 0.375rem; padding: 1rem; margin-bottom: 1rem; }
+        #changeAddressModal .list-group-item-action { display: flex; justify-content: space-between; align-items: center; }
+        #changeAddressModal .address-content { flex-grow: 1; cursor: pointer; }
+        #changeAddressModal .address-actions { flex-shrink: 0; }
+        .summary-item-img { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; margin-right: 10px; }
+        #giftMessageGenerator { background-color: #f8f9fa; border: 1px dashed #ced4da; padding: 15px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+<div class="container py-5" layout:fragment="content">
+    <h1 class="mb-4 text-center text-primary">Detalles de Envío y Pago</h1>
+
+    <div id="alertContainer"></div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h2 class="h5 mb-0">1. Dirección de Envío</h2>
+                    <button class="btn btn-outline-primary btn-sm" id="changeAddressBtn"
+                            data-bs-toggle="modal" data-bs-target="#changeAddressModal"
+                            th:disabled="${direccionesUsuario == null or #lists.isEmpty(direccionesUsuario)}">
+                        Cambiar Dirección
+                    </button>
+                </div>
+                <div class="card-body" id="selectedAddressDisplay">
+
+                    <div th:if="${direccionSeleccionada != null}" class="lh-sm"> <div class="mb-1 align-items-center">
+            <span th:if="${direccionSeleccionada.esPrincipal}"
+                  class="badge bg-primary me-1"
+                  style="font-size: 0.7em; vertical-align: text-bottom;">PRINCIPAL</span>
+
+                        <span class="fw-bold text-dark fs-6"
+                              th:text="${direccionSeleccionada.calleAvenida} + ' ' + ${direccionSeleccionada.numeroCalle}">
+            </span>
+                    </div>
+
+                        <div class="text-muted small mb-1">
+                            <i class="fas fa-map-marker-alt fa-xs me-1"></i>
+                            <span th:text="${direccionSeleccionada.distrito} + ', ' + ${direccionSeleccionada.provincia} + ', ' + ${direccionSeleccionada.departamento}"></span>
+                        </div>
+
+                        <div th:if="${direccionSeleccionada.dptoInterior != null and direccionSeleccionada.dptoInterior != ''}"
+                             class="text-secondary small mb-0">
+                            <i class="fas fa-door-open fa-xs me-1"></i>
+                            <span th:text="'Interior/Dpto: ' + ${direccionSeleccionada.dptoInterior}"></span>
+                        </div>
+
+                        <div th:if="${direccionSeleccionada.referencia != null and direccionSeleccionada.referencia != ''}"
+                             class="small mt-2 pt-2 border-top text-secondary fst-italic">
+                            <i class="fas fa-comment-dots fa-xs me-1 text-primary"></i>
+                            Ref: <span th:text="${direccionSeleccionada.referencia}"></span>
+                        </div>
+                    </div>
+
+                    <div th:if="${direccionSeleccionada == null}">
+                        <div class="alert alert-warning p-2 small mb-0" role="alert">
+                            <i class="fas fa-exclamation-circle me-1"></i> No tienes una dirección seleccionada.
+                            <a href="#" class="fw-bold text-dark text-decoration-underline" data-bs-toggle="modal" data-bs-target="#newAddressModal">Agrega una aquí</a>.
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal fade" id="newAddressModal" tabindex="-1" aria-labelledby="newAddressModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="newAddressModalLabel">Agregar Nueva Dirección</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="newAddressForm">
+                                <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <input type="hidden" id="direccionId" name="id">
+
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label for="departamentoSelect" class="form-label">Departamento <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="departamentoSelect" name="departamento.id" required>
+                                            <option value="">-- Seleccione --</option>
+                                            <option th:each="dep : ${departamentos}" th:value="${dep.id}" th:text="${dep.nombre}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="provinciaSelect" class="form-label">Provincia <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="provinciaSelect" name="provincia.id" required disabled>
+                                            <option value="">-- Seleccione Departamento --</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="distritoSelect" class="form-label">Distrito <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="distritoSelect" name="distrito.id" required disabled>
+                                            <option value="">-- Seleccione Provincia --</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <label for="calleAvenida" class="form-label">Avenida / Calle / Jirón <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="calleAvenida" name="calleAvenida" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="numeroCalle" class="form-label">Número <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="numeroCalle" name="numeroCalle" required>
+                                    </div>
+                                    <div class="col-12">
+                                        <label for="dptoInterior" class="form-label">Dpto./ Interior/ Piso (Opcional)</label>
+                                        <input type="text" class="form-control" id="dptoInterior" name="dptoInterior">
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label for="referencia" class="form-label">Referencia (Opcional)</label>
+                                        <input type="text" class="form-control" id="referencia" name="referencia" placeholder="Ej: Casa verde, frente al parque...">
+                                    </div>
+
+                                    <div class="col-12" id="esPrincipalWrapper">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="esPrincipalNew" name="esPrincipal">
+                                            <label class="form-check-label" for="esPrincipalNew">Marcar como dirección principal</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-primary" id="saveNewAddressBtn">Guardar Dirección</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light"><h2 class="h5 mb-0">2. Método de Envío</h2></div>
+                <div class="card-body">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="shippingMethod" id="deliveryRadio" value="delivery" checked>
+                        <label class="form-check-label" for="deliveryRadio">Despacho a Domicilio (Costo: S/ <span id="deliveryCost">10.00</span>)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="shippingMethod" id="pickupRadio" value="pickup">
+                        <label class="form-check-label" for="pickupRadio">Retiro en Tienda (Gratis)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class.="card shadow-sm mb-4">
+                <div class="card-header bg-light"><h2 class="h5 mb-0">3. Método de Pago</h2></div>
+                <div class.="card-body">
+                    <form id="payment-form">
+                        <div id="card-element" class="form-control" style="padding: 10px;"></div>
+
+                        <div id="card-errors" role="alert" class="text-danger small mt-2"></div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm summary-card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Resumen de tu Pedido</h5>
+
+<!--                    <ul id="summaryItemList" class="list-group list-group-flush mb-3"-->
+<!--                        th:if="${itemsCarrito != null and not #lists.isEmpty(itemsCarrito)}">-->
+
+<!--                        <li th:each="item : ${itemsCarrito}"-->
+<!--                            class="list-group-item d-flex justify-content-between align-items-center px-0">-->
+<!--                            <div class="d-flex align-items-center">-->
+<!--                                <img th:src="@{${item.imagenUrl}}" alt="" class="summary-item-img">-->
+<!--                                <div>-->
+<!--                                    <small class="d-block" th:text="${item.nombre}"></small>-->
+<!--                                    <small class="text-muted" th:text="'Cant: ' + ${item.cantidad}"></small>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                            <span class="fw-semibold" th:text="'S/ ' + ${#numbers.formatDecimal(item.precioUnitario * item.cantidad, 1, 'COMMA', 2, 'POINT')}"></span>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+
+                    <hr th:if="${itemsCarrito != null and not #lists.isEmpty(itemsCarrito)}">
+
+                    <div th:if="${totales != null}">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span id="summarySubtotal" th:text="${'S/ ' + #numbers.formatDecimal(totales.subtotal, 1, 'COMMA', 2, 'POINT')}">S/ 0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Costo de Envío:</span>
+                            <span id="summaryShippingCost">S/ 0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 text-success">
+                            <span>Descuentos:</span>
+                            <span id="summaryDiscount" th:text="${'-S/ ' + #numbers.formatDecimal(totales.ahorroPorProductos, 1, 'COMMA', 2, 'POINT')}">-S/ 0.00</span>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between fw-bold h5">
+                            <span>Total a Pagar:</span>
+                            <span id="summaryTotal" th:text="${'S/ ' + #numbers.formatDecimal(totales.total, 1, 'COMMA', 2, 'POINT')}">S/ 0.00</span>
+                        </div>
+                    </div>
+                    <div th:if="${totales == null or #lists.isEmpty(itemsCarrito)}" class="alert alert-info small">
+                        Tu carrito está vacío.
+                    </div>
+
+                    <button id="goToPaymentBtn" class="btn btn-primary w-100 mt-4"
+                            th:disabled="${totales == null or #lists.isEmpty(itemsCarrito)}">
+                        Ir a Pagar
+                    </button>
+                    <small id="paymentValidationMsg" class="d-block text-danger text-center mt-2" style="display: none !important;">
+                        Selecciona o agrega una dirección para el envío.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="changeAddressModal" tabindex="-1" aria-labelledby="changeAddressModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="changeAddressModalLabel">Selecciona una Dirección</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="list-group" id="addressListContainer">
+                    </div>
+                    <p id="noAddressMessage" class="text-muted" style="display: none;"
+                       th:style="${direccionesUsuario == null or #lists.isEmpty(direccionesUsuario)} ? 'display: block;' : 'display: none;'">
+                        No tienes direcciones guardadas.
+                    </p>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="openNewAddressModalBtn">
+                        <i class="fas fa-plus"></i> Agregar Nueva Dirección
+                    </button>
+                    <div>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" id="selectAddressBtn">Seleccionar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+
+        // --- 👇 ¡AQUÍ ESTÁ TU INTERRUPTOR! 👇 ---
+        // true = Simular pago (no usa Stripe)
+        // false = Pago real (sí usa Stripe)
+        const MODO_SIMULACION = true;
+        // --- FIN DEL INTERRUPTOR ---
+
+        // --- DATOS INYECTADOS (Sin cambios) ---
+        const itemsCarrito = /*[[${itemsCarrito}]]*/ [];
+        let direccionSeleccionada = /*[[${direccionSeleccionada}]]*/ null;
+        let direccionesUsuario = /*[[${direccionesUsuario}]]*/ [];
+        const deliveryCost = 10.0;
+        const csrfToken = /*[[${_csrf?.token}]]*/ null;
+        const csrfHeader = /*[[${_csrf?.headerName}]]*/ null;
+        const stripePublicKey = /*[[${@environment.getProperty('stripe.public.key')}]]*/ null;
+
+        // --- FUNCIONES DE AYUDA (Sin cambios) ---
+        function formatCurrency(value) {
+            const numericValue = parseFloat(value);
+            if (isNaN(numericValue)) return 'S/ 0.00';
+            return `S/ ${numericValue.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+        function getFetchHeaders() {
+            const headers = new Headers({
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            });
+            if (csrfHeader && csrfToken) {
+                headers.append(csrfHeader, csrfToken);
+            }
+            return headers;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // --- FUNCIONES DE CARGA DE UBIGEO (DE TU SCRIPT ORIGINAL) ---
+            async function cargarProvincias(depId) {
+                provSelect.disabled = true;
+                distSelect.disabled = true;
+                provSelect.innerHTML = '<option value="">Cargando...</option>';
+                distSelect.innerHTML = '<option value="">-- Seleccione Provincia --</option>';
+                if (!depId) {
+                    provSelect.innerHTML = '<option value="">-- Seleccione Departamento --</option>';
+                    return;
+                }
+                try {
+                    const response = await fetch(`/api/direccion/provincias/${depId}`);
+                    if (!response.ok) throw new Error('Error al cargar provincias');
+                    const provincias = await response.json();
+                    provSelect.innerHTML = '<option value="">-- Seleccione Provincia --</option>';
+                    provincias.forEach(p => {
+                        provSelect.innerHTML += `<option value="${p.id}">${p.nombre}</option>`;
+                    });
+                    provSelect.disabled = false;
+                } catch (error) {
+                    console.error(error);
+                    provSelect.innerHTML = '<option value="">Error al cargar</option>';
+                }
+            }
+            async function cargarDistritos(provId) {
+                distSelect.disabled = true;
+                distSelect.innerHTML = '<option value="">Cargando...</option>';
+                if (!provId) {
+                    distSelect.innerHTML = '<option value="">-- Seleccione Provincia --</option>';
+                    return;
+                }
+                try {
+                    const response = await fetch(`/api/direccion/distritos/${provId}`);
+                    if (!response.ok) throw new Error('Error al cargar distritos');
+                    const distritos = await response.json();
+                    distSelect.innerHTML = '<option value="">-- Seleccione Distrito --</option>';
+                    distritos.forEach(d => {
+                        distSelect.innerHTML += `<option value="${d.id}">${d.nombre}</option>`;
+                    });
+                    distSelect.disabled = false;
+                } catch (error) {
+                    console.error(error);
+                    distSelect.innerHTML = '<option value="">Error al cargar</option>';
+                }
+            }
+
+            // --- ELEMENTOS DOM (Completos) ---
+            const summarySubtotalEl = document.getElementById('summarySubtotal');
+            const summaryShippingCostEl = document.getElementById('summaryShippingCost');
+            const summaryDiscountEl = document.getElementById('summaryDiscount');
+            const summaryTotalEl = document.getElementById('summaryTotal');
+            const deliveryCostDisplay = document.getElementById('deliveryCost');
+            const deliveryRadio = document.getElementById('deliveryRadio');
+            const pickupRadio = document.getElementById('pickupRadio');
+            const goToPaymentBtn = document.getElementById('goToPaymentBtn');
+            const paymentValidationMsg = document.getElementById('paymentValidationMsg');
+            const selectedAddressDisplay = document.getElementById('selectedAddressDisplay');
+            const changeAddressBtn = document.getElementById('changeAddressBtn');
+            const newAddressModalEl = document.getElementById('newAddressModal');
+            const newAddressModal = new bootstrap.Modal(newAddressModalEl);
+            const newAddressModalLabel = document.getElementById('newAddressModalLabel');
+            const changeAddressModalEl = document.getElementById('changeAddressModal');
+            const changeAddressModal = new bootstrap.Modal(changeAddressModalEl);
+            const saveNewAddressBtn = document.getElementById('saveNewAddressBtn');
+            const selectAddressBtn = document.getElementById('selectAddressBtn');
+            const openNewAddressModalBtn = document.getElementById('openNewAddressModalBtn');
+            const newAddressForm = document.getElementById('newAddressForm');
+            const addressListContainer = document.getElementById('addressListContainer');
+            const formDireccionId = document.getElementById('direccionId');
+            const depSelect = document.getElementById('departamentoSelect');
+            const provSelect = document.getElementById('provinciaSelect');
+            const distSelect = document.getElementById('distritoSelect');
+            const calleInput = document.getElementById('calleAvenida');
+            const numeroInput = document.getElementById('numeroCalle');
+            const dptoInput = document.getElementById('dptoInterior');
+            const principalCheckbox = document.getElementById('esPrincipalNew');
+            const cardErrors = document.getElementById('card-errors');
+            const cardElementDiv = document.getElementById('card-element');
+
+            // --- LÓGICA DE ESTADO Y RESUMEN (DE TU SCRIPT ORIGINAL) ---
+            let currentShippingMethod=deliveryRadio.checked? 'delivery' : 'pickup';
+            let currentSelectedAddress = direccionSeleccionada;
+            let savedAddressId = sessionStorage.getItem('checkoutSelectedAddressId');
+            if (savedAddressId) {
+                savedAddressId = parseInt(savedAddressId, 10);
+                const savedDir = direccionesUsuario.find(dir => dir.id === savedAddressId);
+                if (savedDir) {
+                    currentSelectedAddress = savedDir;
+                    direccionSeleccionada = savedDir;
+                }
+            }
+            let initialSubtotal = parseFloat(summarySubtotalEl ? summarySubtotalEl.textContent.replace(/S\/\s*/, '').replace(',', '') : 0);
+            let initialDiscount = parseFloat(summaryDiscountEl ? summaryDiscountEl.textContent.replace(/-S\/\s*/, '').replace(',', '') : 0);
+            function updateSummary() {
+                const subtotal = initialSubtotal;
+                const discount = initialDiscount;
+                const shippingCost = currentShippingMethod === 'delivery' ? deliveryCost : 0;
+                const total = subtotal + shippingCost - discount;
+                if(summaryShippingCostEl) summaryShippingCostEl.textContent = formatCurrency(shippingCost);
+                if(summaryTotalEl) summaryTotalEl.textContent = formatCurrency(total);
+                if(deliveryCostDisplay) deliveryCostDisplay.textContent = deliveryCost.toFixed(2);
+                validatePaymentButton();
+            }
+            function validatePaymentButton() {
+                 const isDisabled = (currentShippingMethod === 'delivery' && !currentSelectedAddress);
+                 if (goToPaymentBtn) goToPaymentBtn.disabled = isDisabled;
+                 if (paymentValidationMsg) paymentValidationMsg.style.display = isDisabled ? 'block' : 'none';
+            }
+
+            // --- INICIALIZACIÓN DE STRIPE (CON EL INTERRUPTOR) ---
+            let stripe, cardElement;
+            if (!MODO_SIMULACION) {
+                if (!stripePublicKey) {
+                    console.error("Error: La clave pública de Stripe no está configurada.");
+                    if (goToPaymentBtn) goToPaymentBtn.disabled = true;
+                    if (cardErrors) cardErrors.textContent = "Error de configuración de pago.";
+                    return;
+                }
+                stripe = Stripe(stripePublicKey);
+                const elements = stripe.elements();
+                const style = {
+                    base: { fontSize: '16px', color: '#212529', '::placeholder': { color: '#6c757d' } },
+                    invalid: { color: '#dc3545', iconColor: '#dc3545' }
+                };
+                cardElement = elements.create('card', { style: style });
+                if (cardElementDiv) {
+                    cardElement.mount(cardElementDiv);
+                    cardElement.on('change', function(event) {
+                        if (cardErrors) {
+                            cardErrors.textContent = event.error ? event.error.message : '';
+                        }
+                    });
+                } else {
+                     console.error("Error: No se encontró el div #card-element.");
+                     if (goToPaymentBtn) goToPaymentBtn.disabled = true;
+                }
+            } else {
+                console.warn("MODO SIMULACIÓN ACTIVO. El formulario de pago real está deshabilitado.");
+                if (cardElementDiv) cardElementDiv.style.display = 'none';
+            }
+
+            // --- LÓGICA DE GESTIÓN DE DIRECCIONES
+
+            function updateSelectedAddressUI(address) {
+                 currentSelectedAddress = address;
+                 console.log("Dirección seleccionada actualizada:", address);
+
+                 const displayDiv = document.getElementById('selectedAddressDisplay');
+
+                 if (address) {
+                     // AQUI ESTA EL CAMBIO: Usamos el nuevo diseño compacto y bonito
+                     let addressHTML = `
+                        <div class="lh-sm">
+                            <div class="mb-1">
+                                ${address.esPrincipal ? '<span class="badge bg-primary me-1" style="font-size: 0.7em; vertical-align: text-top;">PRINCIPAL</span>' : ''}
+                                <span class="fw-bold text-dark fs-6">
+                                    ${address.calleAvenida || ''} ${address.numeroCalle || ''}
+                                </span>
+                            </div>
+
+                            <div class="text-muted small mb-1">
+                                ${address.distrito || ''}, ${address.provincia || ''}, ${address.departamento || ''}
+                            </div>
+                    `;
+
+                    // Interior (si existe)
+                    if (address.dptoInterior) {
+                        addressHTML += `
+                            <div class="text-secondary small mb-0">
+                                <i class="fas fa-door-open fa-xs me-1 text-muted"></i>
+                                Int/Piso: ${address.dptoInterior}
+                            </div>`;
+                    }
+
+                    // Referencia (si existe) -> ¡AQUÍ ESTÁ LO QUE FALTABA!
+                    if (address.referencia) {
+                        addressHTML += `
+                            <div class="text-secondary small fst-italic mt-1 border-top pt-1">
+                                <i class="fas fa-map-pin fa-xs me-1 text-danger"></i>
+                                Ref: ${address.referencia}
+                            </div>`;
+                    }
+
+                    addressHTML += `</div>`; // Cerrar el div lh-sm
+
+                    displayDiv.innerHTML = addressHTML;
+
+                    if (changeAddressBtn) {
+                        changeAddressBtn.disabled = false;
+                    }
+                 } else {
+                     // Caso sin dirección
+                     displayDiv.innerHTML = `
+                         <div class="alert alert-warning p-2 small mb-0" role="alert">
+                             <i class="fas fa-exclamation-circle me-1"></i> No tienes una dirección seleccionada.
+                             <a href="#" class="fw-bold text-dark text-decoration-underline" data-bs-toggle="modal" data-bs-target="#newAddressModal">Agrega una aquí</a>.
+                         </div>`;
+                     if (changeAddressBtn) {
+                        changeAddressBtn.disabled = true;
+                     }
+                 }
+                 validatePaymentButton();
+            }
+            function updateChangeAddressModalList() {
+                 if (!addressListContainer) return;
+                 const noAddressMsg = document.getElementById('noAddressMessage');
+                 addressListContainer.innerHTML = '';
+                 if (direccionesUsuario.length === 0) {
+                     if(noAddressMsg) noAddressMsg.style.display = 'block';
+                 } else {
+                     if(noAddressMsg) noAddressMsg.style.display = 'none';
+                     direccionesUsuario.forEach(dir => {
+                         const dirElement = document.createElement('div');
+                         dirElement.className = 'list-group-item list-group-item-action';
+                         dirElement.innerHTML = `
+                            <div class="address-content w-100">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <div>
+                                        <input class="form-check-input me-2" type="radio" name="selectedAddressRadio" value="${dir.id}" ${currentSelectedAddress && dir.id === currentSelectedAddress.id ? 'checked' : ''}>
+                                        <span class="fw-bold">
+                                            ${dir.esPrincipal ? '<span class="badge bg-primary me-1" style="font-size:0.6em">PRINCIPAL</span>' : ''}
+                                            ${dir.calleAvenida || ''} ${dir.numeroCalle || ''}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="ms-4 ps-1">
+                                    <small class="d-block text-muted">${dir.distrito || ''}, ${dir.provincia || ''}, ${dir.departamento || ''}</small>
+
+                                    ${dir.dptoInterior ? `<small class="d-block text-secondary"><i class="fas fa-door-open fa-xs"></i> Int: ${dir.dptoInterior}</small>` : ''}
+
+                                    ${dir.referencia ? `<small class="d-block text-secondary fst-italic mt-1"><i class="fas fa-map-pin fa-xs text-danger"></i> ${dir.referencia}</small>` : ''}
+                                </div>
+                            </div>
+
+                            <div class="address-actions ms-2">
+                                <button class="btn btn-sm btn-outline-secondary me-1" onclick="handleEdit(${dir.id})" title="Editar"><i class="fas fa-pencil-alt"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="handleDelete(${dir.id})" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                         `;
+                         dirElement.querySelector('.address-content').addEventListener('click', () => {
+                            dirElement.querySelector('input[type="radio"]').checked = true;
+                         });
+                         addressListContainer.appendChild(dirElement);
+                     });
+                 }
+                 if(changeAddressBtn){
+                    changeAddressBtn.disabled = (direccionesUsuario.length === 0);
+                 }
+            }
+            function prepareNewAddressModal() {
+                newAddressModalLabel.textContent = "Agregar Nueva Dirección";
+                newAddressForm.reset();
+                formDireccionId.value = '';
+                const wrapper = document.getElementById('esPrincipalWrapper');
+                const label = wrapper.querySelector('label');
+                if (direccionesUsuario.length === 0) {
+                    wrapper.style.display = 'none';
+                } else {
+                    wrapper.style.display = 'block';
+                    label.textContent = '¿Quieres que esta sea tu nueva dirección principal?';
+                }
+                provSelect.innerHTML = '<option value="">-- Seleccione Departamento --</option>';
+                distSelect.innerHTML = '<option value="">-- Seleccione Provincia --</option>';
+                provSelect.disabled = true;
+                distSelect.disabled = true;
+                newAddressModal.show();
+            }
+            async function saveOrUpdateAddress() {
+                if (!newAddressForm.checkValidity()) {
+                     newAddressForm.classList.add('was-validated');
+                     return;
+                }
+                newAddressForm.classList.remove('was-validated');
+                const direccionId = formDireccionId.value;
+                const isUpdating = !!direccionId;
+                let esPrincipalValue;
+                if (isUpdating) {
+                    esPrincipalValue = principalCheckbox.checked;
+                } else {
+                    esPrincipalValue = (direccionesUsuario.length === 0) ? true : principalCheckbox.checked;
+                }
+                const addressData = {
+                    id: isUpdating ? direccionId : null,
+                    departamento: { id: depSelect.value },
+                    provincia: { id: provSelect.value },
+                    distrito: { id: distSelect.value },
+                    calleAvenida:calleInput.value,
+                    numeroCalle:numeroInput.value,
+                    dptoInterior:dptoInput.value || null,
+                    referencia: document.getElementById('referencia').value || null,
+                    esPrincipal: esPrincipalValue
+                };
+                const url = isUpdating ? `/api/direccion/${direccionId}` : '/api/direccion/nueva';
+                const method = isUpdating ? 'PUT' : 'POST';
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: getFetchHeaders(),
+                        body: JSON.stringify(addressData)
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || `Error ${response.status}`);
+                    }
+                    const savedAddress = await response.json();
+                    if (isUpdating) {
+                        const index = direccionesUsuario.findIndex(d => d.id === savedAddress.id);
+                        if (index !== -1) {
+                            direccionesUsuario[index] = savedAddress;
+                        }
+                    } else {
+                        direccionesUsuario.push(savedAddress);
+                    }
+                    if (savedAddress.esPrincipal || direccionesUsuario.length === 1) {
+                        direccionesUsuario.forEach(d => {
+                            if (d.id !== savedAddress.id) d.esPrincipal = false;
+                        });
+                        updateSelectedAddressUI(savedAddress);
+                        sessionStorage.setItem('checkoutSelectedAddressId', savedAddress.id);
+                    }
+                    if (currentSelectedAddress && currentSelectedAddress.id === savedAddress.id) {
+                         updateSelectedAddressUI(savedAddress);
+                    }
+                    updateChangeAddressModalList();
+                    newAddressModal.hide();
+                } catch (error) {
+                    console.error('Error al guardar la dirección:', error);
+                    alert(`No se pudo guardar la dirección: ${error.message}`);
+                }
+            }
+            window.handleEdit = async function(id) {
+                console.log("Editando ID:", id);
+                try {
+                    const response = await fetch(`/api/direccion/${id}`, { headers: getFetchHeaders() });
+                    if (!response.ok) throw new Error('No se pudo cargar la dirección');
+                    const dir = await response.json();
+                    newAddressModalLabel.textContent = "Editar Dirección";
+                    formDireccionId.value = dir.id;
+                    calleInput.value = dir.calleAvenida;
+                    numeroInput.value = dir.numeroCalle;
+                    dptoInput.value = dir.dptoInterior;
+                    document.getElementById('referencia').value = dir.referencia || '';
+                    principalCheckbox.checked = dir.esPrincipal;
+                    depSelect.value = dir.departamentoId;
+                    await cargarProvincias(dir.departamentoId);
+                    provSelect.value = dir.provinciaId;
+                    await cargarDistritos(dir.provinciaId);
+                    distSelect.value = dir.distritoId;
+                    changeAddressModal.hide();
+                    newAddressModal.show();
+                } catch(error) {
+                    console.error("Error al cargar dirección para editar:", error);
+                    alert("Error: " + error.message);
+                }
+            }
+            window.handleDelete = async function(id) {
+                if (!confirm("¿Estás seguro de que deseas eliminar esta dirección?")) {
+                    return;
+                }
+                try {
+                    const response = await fetch(`/api/direccion/${id}`, {
+                        method: 'DELETE',
+                        headers: getFetchHeaders()
+                    });
+                    if (!response.ok) {
+                         throw new Error('No se pudo eliminar la dirección');
+                    }
+                    direccionesUsuario = direccionesUsuario.filter(d => d.id !== id);
+                    updateChangeAddressModalList();
+                    if (currentSelectedAddress && currentSelectedAddress.id === id) {
+                        sessionStorage.removeItem('checkoutSelectedAddressId');
+                        const newSelected = direccionesUsuario.find(d => d.esPrincipal) || direccionesUsuario[0] || null;
+                        updateSelectedAddressUI(newSelected);
+                        if (newSelected) {
+                            sessionStorage.setItem('checkoutSelectedAddressId', newSelected.id);
+                        }
+                    }
+                    alert("Dirección eliminada correctamente.");
+                } catch(error) {
+                    console.error("Error al eliminar dirección:", error);
+                    alert("Error: " + error.message);
+                }
+            }
+
+            // --- LISTENERS (DE TU SCRIPT ORIGINAL) ---
+            depSelect.addEventListener('change', function() { cargarProvincias(this.value); });
+            provSelect.addEventListener('change', function() { cargarDistritos(this.value); });
+            deliveryRadio.addEventListener('change', () => {
+                if (deliveryRadio.checked) {
+                    currentShippingMethod = 'delivery';
+                    updateSummary();
+                }
+            });
+            pickupRadio.addEventListener('change', () => {
+                 if (pickupRadio.checked) {
+                    currentShippingMethod = 'pickup';
+                    updateSummary();
+                }
+            });
+            if(saveNewAddressBtn) saveNewAddressBtn.addEventListener('click', saveOrUpdateAddress);
+            if(openNewAddressModalBtn) openNewAddressModalBtn.addEventListener('click', () => {
+                changeAddressModal.hide();
+                prepareNewAddressModal();
+            });
+            if(selectAddressBtn) selectAddressBtn.addEventListener('click', () => {
+                const selectedRadio = changeAddressModalEl.querySelector('input[name="selectedAddressRadio"]:checked');
+                if (selectedRadio) {
+                    const selectedId = parseInt(selectedRadio.value, 10);
+                    const selectedDir = direccionesUsuario.find(dir => dir.id === selectedId);
+                    if (selectedDir) {
+                        updateSelectedAddressUI(selectedDir);
+                        sessionStorage.setItem('checkoutSelectedAddressId', selectedDir.id);
+                    }
+                    changeAddressModal.hide();
+                } else {
+                    alert("Por favor, selecciona una dirección.");
+                }
+            });
+
+            // --- (AQUÍ ESTÁ LA LÓGICA DEL "INTERRUPTOR" PARA EL PAGO) ---
+            if (goToPaymentBtn) {
+                goToPaymentBtn.addEventListener('click', async function(event) {
+                    event.preventDefault();
+
+                    if (currentShippingMethod === 'delivery' && !currentSelectedAddress) {
+                         alert("Por favor, selecciona o agrega una dirección de envío.");
+                         return;
+                    }
+
+                    goToPaymentBtn.disabled = true;
+                    goToPaymentBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...';
+                    if(cardErrors) cardErrors.textContent = '';
+
+                    try {
+                        let fetchUrl;
+                        let fetchBody;
+
+                        if (MODO_SIMULACION) {
+                            // --- MODO SIMULACIÓN ---
+                            console.warn("MODO SIMULACIÓN: Llamando a /api/pago/simular");
+                            fetchUrl = '/api/pago/simular';
+                            fetchBody = JSON.stringify({
+                                direccionId: currentSelectedAddress.id,
+                                shippingMethod: currentShippingMethod
+                            });
+
+                        } else {
+                            // --- MODO REAL (CON STRIPE) ---
+                            console.log("MODO PAGO REAL: Creando token de Stripe...");
+                            const { token, error } = await stripe.createToken(cardElement);
+                            if (error) {
+                                if(cardErrors) cardErrors.textContent = error.message;
+                                throw new Error("Error de validación de tarjeta");
+                            }
+
+                            fetchUrl = '/api/pago/procesar';
+                            fetchBody = JSON.stringify({
+                                token: token.id,
+                                direccionId: currentSelectedAddress.id,
+                                shippingMethod: currentShippingMethod
+                            });
+                        }
+
+                        // --- LLAMADA UNIVERSAL AL BACKEND ---
+                        const response = await fetch(fetchUrl, {
+                            method: 'POST',
+                            headers: getFetchHeaders(),
+                            body: fetchBody
+                        });
+
+                        const result = await response.json();
+                        if (!response.ok) {
+                            throw new Error(result.message || "Error en el servidor");
+                        }
+
+                        // 6. ¡ÉXITO! (Real o Simulado)
+                        console.log("Pago procesado:", result);
+                        window.location.href = '/compra/gracias?pedido=' + result.pedidoId;
+
+                    } catch (err) {
+                        // 7. Manejar cualquier error
+                        console.error("Falló el pago:", err);
+                        if(cardErrors) cardErrors.textContent = err.message;
+                        goToPaymentBtn.disabled = false;
+                        goToPaymentBtn.innerHTML = 'Ir a Pagar';
+                    }
+                });
+            }
+            // --- FIN DE LA MODIFICACIÓN ---
+
+            // --- Inicialización (Sin cambios) ---
+            if (currentSelectedAddress) {
+                updateSelectedAddressUI(currentSelectedAddress);
+            }
+            updateChangeAddressModalList();
+            updateSummary();
+        });
+        /*]]>*/
+    </script>
+
+</div>
+</body>
+</html>

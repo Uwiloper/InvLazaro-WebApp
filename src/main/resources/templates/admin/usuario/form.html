@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{master.html}"
+>
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Usuario</title>
+</head>
+<body>
+<div class="container mt-5" layout:fragment="content" >
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-8">
+            <div class="bg-white shadow rounded p-5">
+                <h3>Actualizar usuario</h3>
+
+                <form id="form-usuario" th:action="@{/admin/usuarios/editar/{id}(id=${usuario.id})}" method="post" class="mt-5" th:object="${usuario}">
+                    <input type="hidden" th:field="*{id}">
+                    <input type="hidden" th:field="*{politica}">
+                    <div class="mb-2">
+                        <label for="dni">Documento de Identidad</label>
+                        <span class="form-control readonly-span form-underline" th:text="*{dni}" ></span>
+                        <input type="hidden" id="dni" th:field="*{dni}">
+                    </div>
+                    <div class="mb-2">
+                        <label for="nombres">Nombres</label>
+                        <input type="text" id="nombres"
+                               placeholder="Nombres"
+                               th:field="*{nombres}"
+                               class="form-control form-underline"
+                               th:errorClass="is-invalid">
+                        <div class="invalid-feedback"
+                             th:errors="*{nombres}" th:if="${#fields.hasErrors('nombres')}"
+                        >
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label for="apellidos">Apellidos</label>
+                        <input type="text" id="apellidos"
+                               placeholder="Apellidos"
+                               th:field="*{apellidos}"
+                               class="form-control form-underline"
+                               th:errorClass="is-invalid">
+                        <div class="invalid-feedback"
+                             th:errors="*{apellidos}" th:if="${#fields.hasErrors('apellidos')}"
+                        >
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label for="celular">Celular</label>
+                        <input type="text" id="celular"
+                               placeholder="Celular"
+                               th:field="*{celular}"
+                               class="form-control form-underline"
+                               th:errorClass="is-invalid">
+                        <div class="invalid-feedback"
+                             th:errors="*{celular}" th:if="${#fields.hasErrors('celular')}"
+                        >
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label for="email">Email</label>
+                        <span class="form-control readonly-span form-underline" th:text="*{email}" ></span>
+                        <input type="hidden" id="email" th:field="*{email}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Asignar Roles:</label>
+                        <div class="d-flex gap-3 flex-wrap">
+
+                            <div class="form-check" th:each="rol : ${T(pe.com.isil.inversioneslazaro.model.Usuario.Rol).values()}">
+                                <th:block th:if="${rol.name() != 'CLIENTE'}">
+                                    <input class="form-check-input" type="checkbox"
+                                           name="roles"
+                                           th:value="${rol}"
+                                           th:id="${'chk_' + rol}">
+                                    <label class="form-check-label" th:for="${'chk_' + rol}"
+                                           th:text="${rol}"></label>
+                                </th:block>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="mb-2" th:if="${modoEdicion}">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" class="form-control form-underline"
+                               placeholder="Ingrese nueva contraseña (opcional)">
+                    </div>
+
+                    <div class="text-end mt-3">
+                        <a th:href="@{/admin/usuarios}" class="btn btn-light">Cancelar</a>
+                        <button class="btn btn-primary">Actualizar</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

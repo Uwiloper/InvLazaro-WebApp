@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{master.html}"
+>
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de usuario</title>
+</head>
+<body>
+<div class="container mt-5" layout:fragment="content" >
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-8">
+            <div class="bg-white shadow rounded p-5">
+                <h3>Registro de usuario</h3>
+                <form th:action="@{/registrar/registro}" method="post" class="mt-5 " th:object="${usuario}">
+                    <div class="mb-2">
+
+                        <label for="dni">Documento de Identidad</label>
+                        <input type="text" id="dni"
+                               placeholder="Documento de Identidad"
+                               th:field="*{dni}"
+                               class="form-control form-underline"
+                               th:errorClass="is-invalid"
+                               maxlength="8"> <div class="invalid-feedback"
+                                                   th:errors="*{dni}" th:if="${#fields.hasErrors('dni')}"
+                    >
+                    </div>
+                        <div id="dniSpinner" style="display: none;" class="form-text text-primary">
+                            Buscando...
+                        </div>
+                        <div id="dniError" style="display: none;" class="form-text text-danger">
+                            DNI no encontrado o inválido.
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label for="nombres">Nombres</label>
+                        <input type="text" id="nombres"
+                               placeholder="Nombres"
+                               th:field="*{nombres}"
+                               class="form-control form-underline"
+                               th:errorClass="is-invalid"
+                               readonly> <div class="invalid-feedback"
+                                              th:errors="*{nombres}" th:if="${#fields.hasErrors('nombres')}"
+                    >
+                    </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label for="apellidos">Apellidos</label>
+                        <input type="text" id="apellidos"
+                               placeholder="Apellidos"
+                               th:field="*{apellidos}"
+                               class="form-control form-underline"
+                               th:errorClass="is-invalid"
+                               readonly> <div class="invalid-feedback"
+                                              th:errors="*{apellidos}" th:if="${#fields.hasErrors('apellidos')}"
+                    >
+                    </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label for="celular">Celular</label>
+                        <input type="text" id="celular"
+                               placeholder="Celular"
+                               th:field="*{celular}"
+                               class="form-control form-underline"
+                               th:errorClass="is-invalid">
+                        <div class="invalid-feedback"
+                             th:errors="*{celular}" th:if="${#fields.hasErrors('celular')}"
+                        >
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label for="email">Email</label>
+                        <input type="email" id="email"
+                               placeholder="Email"
+                               th:field="*{email}"
+                               class="form-control form-underline"
+                               th:errorClass="is-invalid">
+                        <div class="invalid-feedback"
+                             th:errors="*{email}" th:if="${#fields.hasErrors('email')}"
+                        >
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label for="password1">Password</label>
+                        <input type="password" id="password1"
+                               placeholder="Password"
+                               th:field="*{password1}"
+                               class="form-control form-underline"
+                               th:errorClass="is-invalid">
+                        <div class="invalid-feedback"
+                             th:errors="*{password1}" th:if="${#fields.hasErrors('password1')}">
+                        </div>
+                        <div id="password-rules" class="mt-2 p-2 rounded border bg-light" style="display:none; font-size: 0.85rem;">
+                            <p class="mb-1 fw-bold text-muted">La contraseña debe contener:</p>
+                            <ul class="list-unstyled mb-0">
+                                <li id="rule-length" class="text-danger">
+                                    <i class="fas fa-times"></i> Mínimo 8 caracteres
+                                </li>
+                                <li id="rule-upper" class="text-danger">
+                                    <i class="fas fa-times"></i> Una letra mayúscula
+                                </li>
+                                <li id="rule-lower" class="text-danger">
+                                    <i class="fas fa-times"></i> Una letra minúscula
+                                </li>
+                                <li id="rule-number" class="text-danger">
+                                    <i class="fas fa-times"></i> Un número
+                                </li>
+                                <li id="rule-special" class="text-danger">
+                                    <i class="fas fa-times"></i> Sin espacios ni símbolos prohibidos (=, /, *, etc.)
+                                </li>
+                            </ul>
+                        </div>
+
+                    </div>
+
+                    <div class="mb-2">
+                        <label for="password2">Repite Password</label>
+                        <input type="password" id="password2"
+                               placeholder="Password"
+                               th:field="*{password2}"
+                               class="form-control form-underline"
+                               th:errorClass="is-invalid">
+                        <div class="invalid-feedback"
+                             th:errors="*{password2}" th:if="${#fields.hasErrors('password2')}"
+                        >
+                        </div>
+                    </div>
+                    <div class="mb-2 form-check">
+                        <input type="checkbox"
+                               id="politica"
+                               th:field="*{politica}"
+                               class="form-check-input" th:errorclass="is-invalid">
+                        <label class="form-check-label" for="politica">
+                            Acepto las <a href="/politicas-de-privacidad" target="_blank">políticas de privacidad</a>.
+                        </label>
+                        <div class="invalid-feedback"
+                             th:errors="*{politica}" th:if="${#fields.hasErrors('politica')}">
+                        </div>
+                    </div>
+
+                    <div class="text-end mt-3">
+                        <button class="btn btn-primary">Regístrate</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        $(document).ready(function () {
+            // Detectar cuando el usuario deja el campo DNI
+            $("#dni").on('blur', function () {
+                var dni = $(this).val();
+
+                // Resetear campos y mensajes
+                $("#nombres").val(''); // Limpia por si acaso
+                $("#apellidos").val('');
+                $("#dniError").hide();
+
+                // Validar que sean 8 dígitos
+                if (dni.length === 8 && /^\d{8}$/.test(dni)) {
+                    $("#dniSpinner").show(); // Mostrar "Buscando..."
+
+                    // Llamada AJAX a nuestro nuevo endpoint
+                    $.ajax({
+                        url: "/api/v1/consulta/dni/" + dni, // URL de nuestro RestController
+                        type: 'GET',
+                        success: function (data) {
+                            // ¡Éxito! Autocompletar campos
+                            $("#nombres").val(data.nombres);
+                            $("#apellidos").val(data.apellidos);
+                            $("#dniSpinner").hide();
+                        },
+                        error: function (xhr) {
+                            // Error (404, 500, etc.)
+                            $("#dniSpinner").hide();
+                            $("#dniError").show(); // Mostrar "DNI no encontrado"
+                        }
+                    });
+                }
+            });
+            // --- NUEVO CÓDIGO: VALIDACIÓN DE PASSWORD ---
+            const $pwdInput = $("#password1");
+            const $rulesBox = $("#password-rules");
+
+            // Mostrar la cajita de reglas cuando el usuario entra al campo
+            $pwdInput.on('focus', function() {
+                $rulesBox.slideDown();
+            });
+
+            // Validar en tiempo real mientras escribe
+            $pwdInput.on('input', function() {
+                const val = $(this).val();
+
+                // Función helper para cambiar el estado visual (Rojo/Verde)
+                function updateRule(id, isValid) {
+                    const $el = $(id);
+                    const $icon = $el.find("i");
+
+                    if (isValid) {
+                        $el.removeClass("text-danger").addClass("text-success"); // Texto Verde
+                        $icon.removeClass("fa-times").addClass("fa-check");      // Icono Check
+                    } else {
+                        $el.removeClass("text-success").addClass("text-danger"); // Texto Rojo
+                        $icon.removeClass("fa-check").addClass("fa-times");      // Icono X
+                    }
+                }
+
+                // 1. Mínimo 8 caracteres
+                updateRule("#rule-length", val.length >= 8);
+
+                // 2. Al menos una Mayúscula
+                updateRule("#rule-upper", /[A-Z]/.test(val));
+
+                // 3. Al menos una Minúscula
+                updateRule("#rule-lower", /[a-z]/.test(val));
+
+                // 4. Al menos un Número
+                updateRule("#rule-number", /[0-9]/.test(val));
+
+                // 5. Sin caracteres prohibidos (Espacios, =, (, ), /, *, \)
+                // Esta regex busca si existe alguno de los prohibidos. Si existe, isValid es false.
+                const forbiddenChars = /[=\s\(\)\/\\*]/;
+                updateRule("#rule-special", !forbiddenChars.test(val));
+            });
+        });
+    </script>
+</th:block>
+
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{master.html}">
+<head>
+    <title>Cotizador Express | Inversiones Lázaro</title>
+    <style>
+        .step-container { display: none; animation: fadeIn 0.5s; }
+        .step-container.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .option-card {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            padding: 15px;
+            height: 100%;
+        }
+        .option-card:hover { border-color: #adb5bd; background-color: #f8f9fa; }
+        .option-card.selected {
+            border-color: #0d6efd;
+            background-color: #e7f1ff;
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
+        }
+        .option-card img { max-height: 80px; margin-bottom: 10px; object-fit: contain; }
+        .range-value { font-weight: bold; color: #0d6efd; font-size: 1.2rem; }
+        .price-tag { font-size: 2.5rem; font-weight: 800; color: #198754; }
+    </style>
+</head>
+<body>
+<div class="container py-5" layout:fragment="content">
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h3 class="mb-0"><i class="fas fa-calculator me-2"></i> Cotizador Express</h3>
+                    <small>Diseña tu equipo en acero inoxidable en segundos</small>
+                </div>
+                <div class="card-body p-4">
+
+                    <div id="step1" class="step-container active">
+                        <h4 class="text-center mb-4">1. ¿Qué estás buscando?</h4>
+                        <div class="row g-3">
+                            <div class="col-6 col-md-4" th:each="prod : ${productos}" th:if="${prod.activo}">
+                                <div class="option-card" th:onclick="'selectProduct(' + ${prod.id} + ')'">
+                                    <img th:src="@{'/media/' + ${prod.imagenUrl}}" alt="Producto">
+                                    <div class="fw-bold" th:text="${prod.nombre}">Nombre</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="step2" class="step-container">
+                        <h4 class="text-center mb-4">2. Personaliza las Medidas y Calidad</h4>
+
+                        <div class="alert alert-info text-center py-2 mb-4">
+                            <strong>Producto:</strong> <span id="lblProductoSeleccionado"></span>
+                        </div>
+
+                        <div class="mb-4 text-center">
+                            <label class="form-label fw-bold d-block mb-2">Calidad del Acero:</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="calidad" id="calidad201" value="201" checked onchange="updateCalculation()">
+                                <label class="btn btn-outline-secondary" for="calidad201">AISI 201 (Económico)</label>
+
+                                <input type="radio" class="btn-check" name="calidad" id="calidad304" value="304" onchange="updateCalculation()">
+                                <label class="btn btn-outline-primary" for="calidad304">AISI 304 (Quirúrgico)</label>
+                            </div>
+                        </div>
+
+                        <div class="row g-4">
+                            <div class="col-md-12">
+                                <label class="form-label">Largo (Frente): <span id="valLargo" class="range-value">100</span> cm</label>
+                                <input type="range" class="form-range" id="rngLargo" step="10" oninput="updateCalculation()">
+                                <div class="d-flex justify-content-between small text-muted">
+                                    <span id="minLargoDisplay">0cm</span>
+                                    <span id="maxLargoDisplay">300cm</span>
+                                </div>
+                            </div>
+                            <div class="col-md-12 text-center mt-2">
+                                <small class="text-muted">Ancho estándar: <span id="lblFondoEstandar"></span>cm | Alto estándar: <span id="lblAltoEstandar"></span>cm</small>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex justify-content-between">
+                            <button class="btn btn-secondary" onclick="goToStep(1)">Atrás</button>
+                            <button class="btn btn-primary" onclick="goToStep(3)">Siguiente</button>
+                        </div>
+                    </div>
+
+                    <div id="step3" class="step-container">
+                        <h4 class="text-center mb-4">3. Agrega Detalles</h4>
+                        <div class="row g-3" id="extrasContainer">
+                        </div>
+
+                        <div class="mt-4">
+                            <label>Detalle adicional (Opcional)</label>
+                            <textarea class="form-control" id="txtDetalleExtra" rows="2" placeholder="Ej: Quiero la poza a la derecha..."></textarea>
+                        </div>
+
+                        <div class="mt-4 d-flex justify-content-between">
+                            <button class="btn btn-secondary" onclick="goToStep(2)">Atrás</button>
+                            <button class="btn btn-success" onclick="goToStep(4)">Ver Presupuesto</button>
+                        </div>
+                    </div>
+
+                    <div id="step4" class="step-container text-center">
+                        <h4 class="text-muted mb-2">Precio Estimado Referencial</h4>
+                        <div class="price-tag mb-3" id="finalPrice">S/ 0.00</div>
+
+                        <div class="card bg-light p-3 mb-3 text-start">
+                            <h6 class="mb-3 border-bottom pb-2">Resumen:</h6>
+                            <ul class="list-unstyled small mb-0" id="resumenLista">
+                            </ul>
+                        </div>
+
+                        <div class="row g-2 text-start mb-3">
+                            <div class="col-md-6">
+                                <input type="text" id="clientName" class="form-control" placeholder="Tu Nombre">
+                            </div>
+                            <div class="col-md-6">
+                                <input type="tel" id="clientPhone" class="form-control" placeholder="WhatsApp">
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button class="btn btn-secondary" onclick="goToStep(3)">Editar</button>
+                            <button class="btn btn-primary w-50" onclick="enviarCotizacion()">
+                                <i class="fab fa-whatsapp me-2"></i> Solicitar
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div layout:fragment="scripts">
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        // 1. OBTENER DATOS DE LA BASE DE DATOS (Inyectados por Thymeleaf)
+        // Esto reemplaza tu antiguo EXTRAS_DB hardcodeado
+        const productosDB = /*[[${productos}]]*/ [];
+
+        let currentProductObj = null;
+        let finalTotal = 0;
+
+        function goToStep(step) {
+            document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
+            document.getElementById('step' + step).classList.add('active');
+        }
+
+        function selectProduct(id) {
+            // Buscar producto en el array
+            currentProductObj = productosDB.find(p => p.id === id);
+
+            if (!currentProductObj) return;
+
+            // Configurar UI con datos del producto
+            document.getElementById('lblProductoSeleccionado').innerText = currentProductObj.nombre;
+            document.getElementById('lblAltoEstandar').innerText = currentProductObj.altoEstandar;
+            const lblFondo = document.getElementById('lblFondoEstandar');
+            if(lblFondo) lblFondo.innerText = currentProductObj.fondoEstandar;
+
+            // Configurar slider según rangos disponibles
+            // Encontramos el min y max largo de todos los rangos configurados
+            let minL = 9999, maxL = 0;
+            currentProductObj.rangos.forEach(r => {
+                if (r.minLargo < minL) minL = r.minLargo;
+                if (r.maxLargo > maxL) maxL = r.maxLargo;
+            });
+
+            // Si no hay rangos configurados, ponemos default
+            if(maxL === 0) { minL = 60; maxL = 200; }
+
+            const slider = document.getElementById('rngLargo');
+            slider.min = minL;
+            slider.max = maxL;
+            slider.value = minL; // Resetear al mínimo
+
+            document.getElementById('minLargoDisplay').innerText = minL + 'cm';
+            document.getElementById('maxLargoDisplay').innerText = maxL + 'cm';
+
+            // Generar Checkboxes de Extras
+            renderExtras();
+
+            // Recalcular
+            updateCalculation();
+            goToStep(2);
+        }
+
+        function renderExtras() {
+            const container = document.getElementById('extrasContainer');
+            container.innerHTML = '';
+
+            if (currentProductObj.componentes && currentProductObj.componentes.length > 0) {
+                currentProductObj.componentes.forEach(comp => {
+                    let col = document.createElement('div');
+                    col.className = 'col-6';
+                    col.innerHTML = `
+                        <div class="form-check card p-3 h-100">
+                            <input class="form-check-input extra-check" type="checkbox"
+                                   value="${comp.precio}"
+                                   data-nombre="${comp.nombre}"
+                                   id="comp_${comp.id}"
+                                   onchange="updateCalculation()">
+                            <label class="form-check-label" for="comp_${comp.id}">
+                                ${comp.nombre} <br> <small class="text-success">+ S/ ${comp.precio}</small>
+                            </label>
+                        </div>`;
+                    container.appendChild(col);
+                });
+            } else {
+                container.innerHTML = '<p class="text-center text-muted">No hay accesorios adicionales para este equipo.</p>';
+            }
+        }
+
+        function updateCalculation() {
+            if (!currentProductObj) return;
+
+            const largo = parseInt(document.getElementById('rngLargo').value);
+            document.getElementById('valLargo').innerText = largo;
+
+            const calidad = document.querySelector('input[name="calidad"]:checked').value; // '201' o '304'
+
+            // 1. Buscar precio base según rango
+            let precioBase = 0;
+            const rangoEncontrado = currentProductObj.rangos.find(r => largo >= r.minLargo && largo <= r.maxLargo);
+
+            if (rangoEncontrado) {
+                precioBase = (calidad === '304') ? rangoEncontrado.precio304 : rangoEncontrado.precio201;
+            } else {
+                // Fallback si está fuera de rango (usar el último o primero)
+                // O mostrar alerta "Medida no disponible"
+            }
+
+            // 2. Sumar Extras
+            let precioExtras = 0;
+            document.querySelectorAll('.extra-check:checked').forEach(chk => {
+                precioExtras += parseFloat(chk.value);
+            });
+
+            finalTotal = parseFloat(precioBase) + precioExtras;
+            document.getElementById('finalPrice').innerText = 'S/ ' + finalTotal.toFixed(2);
+
+            actualizarResumen(largo, calidad, precioBase, precioExtras);
+        }
+
+        function actualizarResumen(largo, calidad, precioBase, precioExtras) {
+            const lista = document.getElementById('resumenLista');
+            let html = `<li><strong>Equipo:</strong> ${currentProductObj.nombre} (${largo}cm) - Calidad ${calidad}</li>`;
+
+            document.querySelectorAll('.extra-check:checked').forEach(chk => {
+                html += `<li>+ ${chk.getAttribute('data-nombre')}</li>`;
+            });
+
+            lista.innerHTML = html;
+        }
+
+        function enviarCotizacion() {
+            // Tu lógica de envío a WhatsApp o Backend aquí
+            const phone = "51999999999"; // Tu número de ventas
+            const msg = `Hola, quiero cotizar: ${document.getElementById('resumenLista').innerText}. Precio aprox: S/${finalTotal}`;
+            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        /*]]>*/
+    </script>
+</div>
+</body>
+</html>

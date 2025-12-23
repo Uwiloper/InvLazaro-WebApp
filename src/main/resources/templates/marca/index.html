@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{master.html}">
+<head>
+    <meta charset="UTF-8">
+    <title>Marca</title>
+</head>
+<body>
+<div class="container" layout:fragment="content">
+    <div class="d-flex align-items-center mb-4">
+        <a href="/admin/dashboard" class="btn btn-secondary me-3"><i class="fas fa-arrow-left"></i></a>
+        <h1>Listado de Marca</h1>
+    </div>
+
+
+    <a th:href="@{/admin/marca/nuevo}" class="btn btn-primary">Nuevo</a>
+    <a th:href="@{/admin/marca/habilitar}" class="btn btn-secondary">Habilitar</a>
+    <table class="table table-striped table-hover">
+        <thead>
+        <tr>
+            <th>Id</th>
+            <th>Nombre</th>
+            <th>Estado</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="mar : ${marca} ">
+            <td th:text="${mar.id}"></td>
+            <td th:text="${mar.nombre}"></td>
+            <td th:text="${mar.estado? 'habilitado': 'deshabilitado'}"></td>
+            <td>
+                <a th:href="@{/admin/marca/editar/{id}(id=${mar.id})}" title="Editar marca" class="btn btn-primary"> <i class="fa fa-edit"></i></a>
+                <a href="" title="Eliminar marca" onclick="return eliminarCate(this)" class="btn btn-danger"> <i class="fa fa-trash"></i></a>
+                <form th:action="@{/admin/marca/eliminar/{id}(id=${mar.id})}" method="get" class="d-none"></form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+
+</div>
+
+<div layout:fragment="scripts">
+    <script>
+        function eliminarCate(etiqueta)
+        {
+            var ok = confirm('¿Estas seguro de Desactivar la marca?');
+
+            if(ok)
+            {
+                etiqueta.nextElementSibling.submit();
+            }
+            return false;
+        }
+    </script>
+</div>
+
+</body>
+</html>

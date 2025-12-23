@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{master.html}">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+
+    <style>
+        .hero-banner-container {
+            /* 1. LA ALTURA */
+            height: 60vh;
+            min-height: 400px;
+
+            /* 2. DISTRIBUCIÓN (Centrado y cover) */
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-size: cover;
+
+            /* 3. CENTRADO DEL TEXTO (Tus letras) */
+            display: flex;
+            align-items: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        .hero-banner-container img{
+            width: 100%;
+            height: auto;
+
+        }
+        .cuadro-flotante {
+            border-radius: 1rem; overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: all 0.3s ease; height: 100%;
+        }
+        .cuadro-flotante:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .cuadro-flotante img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .cuadro-flotante.card {
+            display: flex; flex-direction: column;
+        }
+        .cuadro-flotante.card img {
+            height: 200px; flex-shrink: 0;
+        }
+        .cuadro-flotante.card .card-body {
+<!--            flex-grow: 1;-->
+        }
+        .anuncio-tira {
+            width: 100%;
+        }
+        .anuncio-tira img {
+            width: 100%;
+            height: auto;
+            display:block;
+        }
+        .product-carousel .swiper-slide { width: auto; }
+        .product-card {
+            width: 220px; height: 100%;
+        }
+        .product-card .card-img-top { height: 150px; object-fit: cover; }
+        .product-card .card-body { padding: 0.75rem; }
+        .product-card .card-title { font-size: 0.9rem; }
+        .price-original {
+            text-decoration: line-through; color: #6c757d;
+            font-size: 0.8rem; margin-left: 5px;
+        }
+        .price-oferta {
+            color: #dc3545; font-weight: bold; font-size: 1.1rem;
+        }
+        .price-regular {
+            color: #212529; font-weight: bold; font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+
+<section layout:fragment="content">
+
+    <div th:if="${bannerHero != null}" class="hero-banner-container mb-4"
+         th:style="'background-image: url(\'' + @{${bannerHero.getImagenFondoUrl()}} + '\');'">
+        <div class="container">
+            <h1 th:text="${bannerHero.titulo}">Título del Banner</h1>
+            <p th:text="${bannerHero.subtitulo}" style="white-space: pre-line;">Subtítulo del banner.</p>
+            <a th:if="${bannerHero.enlaceBoton != null AND bannerHero.textoBoton != null}"
+               th:href="@{${bannerHero.enlaceBoton}}"
+               class="btn btn-primary btn-lg">
+                <span th:text="${bannerHero.textoBoton}">Ver Catálogo</span>
+            </a>
+        </div>
+    </div>
+    <div th:if="${bannerHero == null}" class="hero-banner-container mb-4"
+         th:style="'background-image: url(\'/img/imagenFondoCocina.png\');'">
+        <div class="container">
+            <h1>Bienvenido a Inversiones Lázaro</h1>
+            <p>Explora nuestro catálogo de productos.</p>
+        </div>
+    </div>
+    <div class="container">
+
+        <div th:if="${seccionOfertas != null and not #lists.isEmpty(seccionOfertas)}" class="my-5" data-aos="fade-up">
+            <h2 class="mb-3 text-center">🔥 OFERTAS ESPECIALES</h2>
+
+            <div class="swiper offers-carousel" style="padding-bottom: 40px; padding-left: 10px; padding-right: 10px;">
+
+                <div class="swiper-wrapper">
+
+                    <div class="swiper-slide" th:each="oferta : ${seccionOfertas}">
+                        <a th:href="@{${oferta.enlaceUrl}}" class="d-block h-100 text-decoration-none">
+                            <div class="cuadro-flotante">
+                                <img th:src="@{${oferta.getImagenUrl()}}" th:alt="${oferta.titulo}"
+                                     style="height: 280px;">
+                            </div>
+                        </a>
+                    </div>
+
+                </div>
+
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+                <div class="swiper-pagination"></div>
+            </div>
+        </div>
+
+        <div th:if="${seccionAnuncio != null}" class="my-5">
+            <a th:href="@{${seccionAnuncio.enlaceUrl}}">
+                <div class="anuncio-tira">
+                    <img th:src="@{${seccionAnuncio.getImagenUrl()}}" th:alt="${seccionAnuncio.titulo}">
+                </div>
+            </a>
+        </div>
+
+        <div class="my-5" data-aos="fade-up" data-aos-delay="100">
+            <h2 class="mb-3 text-center">NUESTRAS LÍNEAS</h2>
+
+            <th:block th:with="
+                slotIndustrialList = ${seccionClasificaciones.?[titulo == 'Industrial']},
+                slotNegocioList = ${seccionClasificaciones.?[titulo == 'Negocio']},
+                slotHogarList = ${seccionClasificaciones.?[titulo == 'Hogar']},
+                slotMobiliarioList = ${seccionClasificaciones.?[titulo == 'Mobiliario']}
+            ">
+                <th:block th:with="
+                    slotIndustrial = ${!slotIndustrialList.isEmpty()} ? ${slotIndustrialList[0]} : null,
+                    slotNegocio = ${!slotNegocioList.isEmpty()} ? ${slotNegocioList[0]} : null,
+                    slotHogar = ${!slotHogarList.isEmpty()} ? ${slotHogarList[0]} : null,
+                    slotMobiliario = ${!slotMobiliarioList.isEmpty()} ? ${slotMobiliarioList[0]} : null
+                ">
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+
+                        <div class="col">
+                            <a th:href="${slotIndustrial != null} ? @{${slotIndustrial.enlaceUrl}} : '#'" class="text-decoration-none">
+                                <div class="card cuadro-flotante text-center">
+                                    <img th:src="${slotIndustrial != null AND slotIndustrial.getImagenUrl() != null} ? @{${slotIndustrial.getImagenUrl()}} : @{/img/placeholder.png}"
+                                         style="height: 250px;" alt="Industrial">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Industrial</h5>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col">
+                            <a th:href="${slotNegocio != null} ? @{${slotNegocio.enlaceUrl}} : '#'" class="text-decoration-none">
+                                <div class="card cuadro-flotante text-center">
+                                    <img th:src="${slotNegocio != null AND slotNegocio.getImagenUrl() != null} ? @{${slotNegocio.getImagenUrl()}} : @{/img/placeholder.png}"
+                                         style="height: 250px;" alt="Negocio">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Negocio</h5>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col">
+                            <a th:href="${slotHogar != null} ? @{${slotHogar.enlaceUrl}} : '#'" class="text-decoration-none">
+                                <div class="card cuadro-flotante text-center">
+                                    <img th:src="${slotHogar != null AND slotHogar.getImagenUrl() != null} ? @{${slotHogar.getImagenUrl()}} : @{/img/placeholder.png}"
+                                         style="height: 250px;" alt="Hogar">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Hogar</h5>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col">
+                            <a th:href="${slotMobiliario != null} ? @{${slotMobiliario.enlaceUrl}} : '#'" class="text-decoration-none">
+                                <div class="card cuadro-flotante text-center">
+                                    <img th:src="${slotMobiliario != null AND slotMobiliario.getImagenUrl() != null} ? @{${slotMobiliario.getImagenUrl()}} : @{/img/placeholder.png}"
+                                         style="height: 250px;" alt="Mobiliario">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Mobiliario</h5>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+
+                    </div>
+                </th:block>
+            </th:block>
+        </div>
+
+        <div th:if="${seccionCarrusel != null and not #lists.isEmpty(seccionCarrusel)}" class="mb-5" data-aos="fade-up" data-aos-delay="100">
+            <h2 class="mb-3 text-center">Descubre Más</h2>
+
+            <div class="swiper product-carousel">
+                <div class="swiper-wrapper">
+                    <div class="swiper-slide" th:each="p : ${seccionCarrusel}">
+                        <div class="card product-card h-100">
+                            <a th:href="@{/catalogo/producto/{id}(id=${p.id})}">
+                                <img th:src="${p.getImagenPrincipalUrl()}" class="card-img-top" th:alt="${p.nomPro}">
+                            </a>
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title" th:text="${p.nomPro}">Nombre</h5>
+                                <div class="mt-auto">
+                                    <div th:if="${p.precioOferta != null AND p.precioOferta < p.precio}">
+                                        <span class="price-oferta" th:text="'S/ ' + ${#numbers.formatDecimal(p.precioOferta, 1, 2)}"></span>
+                                        <span class="price-original" th:text="'S/ ' + ${#numbers.formatDecimal(p.precio, 1, 2)}"></span>
+                                    </div>
+                                    <div th:unless="${p.precioOferta != null AND p.precioOferta < p.precio}">
+                                        <span class="price-regular" th:text="'S/ ' + ${#numbers.formatDecimal(p.precio, 1, 2)}"></span>
+                                    </div>
+                                    <a th:href="@{/catalogo/producto/{id}(id=${p.id})}" class="btn btn-primary btn-sm mt-2">Ver Producto</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<div layout:fragment="scripts">
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            AOS.init();
+            const swipers = document.querySelectorAll('.product-carousel');
+            swipers.forEach(function (swiperEl) {
+                new Swiper(swiperEl, {
+                    slidesPerView: 'auto',
+                    spaceBetween: 16,
+
+<!--                    *****Opcional para que el carrusel se mueva automaticamente ***********-->
+                    loop: true,
+                    autoplay: {
+                        delay: 5000,
+                        disableOnInteraction: false,
+                    },
+<!--                    ***** fin Opcional***************-->
+                    navigation: {
+                        nextEl: '.swiper-button-next',
+                        prevEl: '.swiper-button-prev',
+                    },
+                    breakpoints: {
+                        576: { slidesPerView: 2, spaceBetween: 10 },
+                        768: { slidesPerView: 3, spaceBetween: 16 },
+                        1200: { slidesPerView: 5, spaceBetween: 16 }
+                    }
+                });
+
+            });
+            new Swiper('.offers-carousel', {
+            // 1. Muestra las cartas que quepan
+            slidesPerView: 1,
+
+            // 2. Espacio entre cartas
+            spaceBetween: 20,
+
+
+            loop: true,
+            slidesPerGroup: 1,
+
+            // (Opcional) Autoplay:  se mueva solo cada 3 segundos
+             autoplay: {
+              delay: 3000,
+               disableOnInteraction: false,
+             },
+
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+            },
+
+            // Puntos de navegación (opcional)
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true,
+            },
+
+            breakpoints: {
+                640: {
+                    slidesPerView: 2, // Tablet: Muestra 2
+                },
+                768: {
+                    slidesPerView: 3, // Laptop pequeña: Muestra 3
+                },
+                1024: {
+                    slidesPerView: 4, // PC Grande: Muestra 4
+                }
+            }
+        });
+
+        });
+    </script>
+</div>
+
+</body>
+</html>

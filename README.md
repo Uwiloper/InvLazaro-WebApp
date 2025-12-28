@@ -1,6 +1,8 @@
 # Inversiones Lázaro - Plataforma Web
 
-![Portada Inversiones Lázaro](fotos/InvLazaro-Fondo-01.jpg)
+<div align="center">
+  <img src="fotos/InvLazaro-Fondo-01.webp" width="100%" style="border-radius: 10px;" alt="Vistas de la App">
+</div>
 
 > **Sistema integral de gestión de ventas, cotizaciones a medida y logística para metalmecánica.**
 
@@ -18,7 +20,9 @@ El sistema fusiona dos mundos:
 
 La interfaz está diseñada para ser responsiva y fácil de usar.
 
-![Pantallas del Sistema](fotos/InvLazaro-pantallas-01.png)
+<div align="center">
+  <img src="fotos/InvLazaro-pantallas-01.webp" width="100%" style="border-radius: 10px;" alt="Vistas de la App">
+</div>
 
 ---
 
